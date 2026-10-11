@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>powerswap</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@solana/web3.js@1.98.0/lib/index.iife.min.js"></script>
+<style>
+:root{
+  --bg:#000000; --bg2:#08100b; --panel:#0f1b13; --line:#1d3a27; --ink:#e6fbe9; --mute:#79a384;
+  --accent:#1fe36a; --accent-ink:#00210c; --ok:#5ff0a0; --bad:#ff7a8a;
+  --radius:18px;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+*,*::before,*::after{box-sizing:inherit}
+html,body{margin:0;min-height:100%}
+body{
+  background:radial-gradient(1200px 600px at 50% -10%,#0b3a1c 0%,var(--bg) 60%);
+  color:var(--ink); font-family:"Bricolage Grotesque",system-ui,-apple-system,"Segoe UI",sans-serif;
+  display:flex; flex-direction:column; align-items:center; min-height:100vh;
+}
+header{width:100%;max-width:960px;display:flex;justify-content:space-between;align-items:center;padding:18px 20px}
+.logo{font-weight:800;font-size:22px;letter-spacing:-.02em}
+.logo span{color:var(--accent)}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.btn{background:var(--panel);border:1px solid var(--line);padding:10px 16px;border-radius:999px;font-weight:600}
+.btn:hover{border-color:var(--accent)}
+main{width:100%;max-width:480px;padding:12px 16px 60px}
+.card{background:var(--bg2);border:1px solid var(--line);border-radius:24px;padding:14px}
+.card-head{display:flex;justify-content:space-between;align-items:center;padding:4px 6px 12px}
+.card-head h1{font-size:18px;margin:0;font-weight:800}
+.icon-btn{width:36px;height:36px;border-radius:50%;background:var(--panel);display:grid;place-items:center;border:1px solid var(--line)}
+.box{background:var(--bg);border:1px solid var(--line);border-radius:var(--radius);padding:14px}
+.box:focus-within{border-color:var(--accent)}
+.row{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.label{color:var(--mute);font-size:13px}
+.quick button{font-size:12px;color:var(--accent);padding:2px 8px;border-radius:8px;background:var(--panel);margin-left:4px}
+.amt{width:100%;background:none;border:0;color:var(--ink);font:inherit;font-size:30px;font-weight:600;text-align:right;min-width:0;padding:0}
+.amt::placeholder{color:#2f5a3d}
+.tok{display:flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:6px 12px 6px 6px;font-weight:700;white-space:nowrap}
+.tok:hover{border-color:var(--accent)}
+.ico{width:28px;height:28px;border-radius:50%;background:var(--line);object-fit:cover;flex:none;display:grid;place-items:center;font-size:12px;overflow:hidden}
+.usd{color:var(--mute);font-size:13px;text-align:right;min-height:18px}
+.flip-wrap{display:flex;justify-content:center;margin:-14px 0;position:relative;z-index:2}
+.flip{width:40px;height:40px;border-radius:12px;background:var(--panel);border:3px solid var(--bg2);display:grid;place-items:center;transition:transform .25s}
+.flip:hover{transform:rotate(180deg)}
+.info{margin:12px 4px 4px;font-size:13px;color:var(--mute);display:grid;gap:6px}
+.info .row span:last-child{color:var(--ink)}
+.go{width:100%;margin-top:12px;padding:16px;border-radius:var(--radius);background:var(--accent);color:var(--accent-ink);font-weight:800;font-size:17px}
+.go:disabled{background:var(--panel);color:var(--mute);cursor:not-allowed}
+.msg{margin-top:12px;padding:10px 12px;border-radius:12px;font-size:13px;word-break:break-word}
+.msg.err{background:rgba(255,122,138,.12);color:var(--bad)}
+.msg.ok{background:rgba(31,227,106,.12);color:var(--ok)}
+.msg a{color:inherit}
+.hi{color:var(--bad)!important}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.78);display:none;align-items:center;justify-content:center;padding:16px;z-index:10}
+.modal.open{display:flex}
+.sheet{background:var(--bg2);border:1px solid var(--line);border-radius:24px;width:100%;max-width:420px;max-height:80vh;display:flex;flex-direction:column;padding:16px}
+.sheet h2{margin:0 0 12px;font-size:17px}
+.search{width:100%;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font:inherit;margin-bottom:10px}
+.list{overflow:auto;display:flex;flex-direction:column;gap:2px}
+.item{display:flex;align-items:center;gap:12px;padding:10px;border-radius:12px;text-align:left;width:100%}
+.item:hover{background:var(--panel)}
+.item .nm{flex:1;min-width:0}
+.item .nm b{display:block}
+.item .nm small{color:var(--mute);display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.slip{display:flex;gap:8px;margin:8px 0}
+.slip button{flex:1;padding:10px;border-radius:12px;background:var(--panel);border:1px solid var(--line);font-weight:600}
+.slip button.on{border-color:var(--accent);color:var(--accent)}
+.custom{width:100%}
+.spin{display:inline-block;width:14px;height:14px;border:2px solid var(--mute);border-top-color:var(--accent);border-radius:50%;animation:s .7s linear infinite;vertical-align:-2px}
+@keyframes s{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.flip,.spin{transition:none;animation-duration:2s}}
+footer{margin-top:auto;padding:20px;color:var(--mute);font-size:12px;text-align:center}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">power<span>swap</span></div>
+  <button class="btn" id="connectBtn">Connect wallet</button>
+</header>
+
+<main>
+  <div class="card">
+    <div class="card-head">
+      <h1>Swap</h1>
+      <button class="icon-btn" id="settingsBtn" aria-label="Settings">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h10M18 6h2M4 12h2M10 12h10M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="8" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg>
+      </button>
+    </div>
+
+    <div class="box">
+      <div class="row">
+        <span class="label">You pay</span>
+        <span class="label quick">Balance <span id="balIn">–</span>
+          <button id="halfBtn">Half</button><button id="maxBtn">Max</button></span>
+      </div>
+      <div class="row" style="margin-top:10px">
+        <button class="tok" id="tokIn"></button>
+        <input class="amt" id="amtIn" inputmode="decimal" placeholder="0.00" autocomplete="off" aria-label="Amount to pay">
+      </div>
+      <div class="usd" id="usdIn"></div>
+    </div>
+
+    <div class="flip-wrap"><button class="flip" id="flipBtn" aria-label="Swap direction">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4v16M7 20l-3-3M7 20l3-3M17 20V4M17 4l-3 3M17 4l3 3"/></svg>
+    </button></div>
+
+    <div class="box">
+      <div class="row"><span class="label">You receive</span><span class="label">Balance <span id="balOut">–</span></span></div>
+      <div class="row" style="margin-top:10px">
+        <button class="tok" id="tokOut"></button>
+        <input class="amt" id="amtOut" readonly placeholder="0.00" aria-label="Amount to receive">
+      </div>
+      <div class="usd" id="usdOut"></div>
+    </div>
+
+    <div class="info" id="info" hidden>
+      <div class="row"><span>Rate</span><span id="rate"></span></div>
+      <div class="row"><span>Price impact</span><span id="impact"></span></div>
+      <div class="row"><span>Minimum received</span><span id="minOut"></span></div>
+      <div class="row"><span>Route</span><span id="route"></span></div>
+    </div>
+
+    <button class="go" id="goBtn" disabled>Connect wallet</button>
+    <div id="status"></div>
+  </div>
+</main>
+
+<footer>Routing by Jupiter. Swaps are final once confirmed on-chain.</footer>
+
+<div class="modal" id="tokModal" role="dialog" aria-modal="true" aria-label="Select token">
+  <div class="sheet">
+    <h2>Select a token</h2>
+    <input class="search" id="search" placeholder="Search by name, symbol or mint address" autocomplete="off">
+    <div class="list" id="tokList"></div>
+  </div>
+</div>
+
+<div class="modal" id="setModal" role="dialog" aria-modal="true" aria-label="Settings">
+  <div class="sheet">
+    <h2>Slippage tolerance</h2>
+    <div class="slip" id="slipPresets"></div>
+    <input class="search custom" id="slipCustom" placeholder="Custom % (e.g. 0.8)" inputmode="decimal">
+    <div class="label" style="margin-top:4px">If the price moves more than this, the swap fails instead of filling at a worse price.</div>
+    <h2 style="margin-top:18px">Solana RPC endpoint</h2>
+    <input class="search" id="rpcInput" placeholder="https://...">
+    <div class="label">The public endpoint is rate-limited. Use your own (Helius, QuickNode, Triton) for reliable use.</div>
+    <button class="go" id="setClose">Done</button>
+  </div>
+</div>
+
+<script>
+(() => {
+  const { Connection, PublicKey, VersionedTransaction } = solanaWeb3;
+
+  // ---------- Config ----------
+  const JUP = "https://lite-api.jup.ag";           // swap with an API key: https://api.jup.ag
+  const DEFAULT_RPC = "https://api.mainnet-beta.solana.com";
+  const TOKEN_PROGRAM = new PublicKey("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA");
+  const TOKEN_2022 = new PublicKey("TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb");
+
+  const DEFAULTS = [
+    { id:"So11111111111111111111111111111111111111112", symbol:"SOL",  name:"Solana",  decimals:9, icon:"https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/So11111111111111111111111111111111111111112/logo.png" },
+    { id:"EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v", symbol:"USDC", name:"USD Coin", decimals:6, icon:"https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v/logo.png" },
+    { id:"Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB", symbol:"USDT", name:"Tether USD", decimals:6, icon:"https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB/logo.svg" },
+    { id:"JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN", symbol:"JUP",  name:"Jupiter", decimals:6, icon:"" },
+    { id:"DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263", symbol:"BONK", name:"Bonk", decimals:5, icon:"" },
+    { id:"EKpQGSJtjMFqKZ9KQanSqYXRcF8fBopzLHYxdM65zcjm", symbol:"WIF",  name:"dogwifhat", decimals:6, icon:"" },
+  ];
+
+  // ---------- State ----------
+  const S = {
+    rpc: localStorageGet("rpc") || DEFAULT_RPC,
+    conn: null, provider: null, pubkey: null,
+    inTok: DEFAULTS[0], outTok: DEFAULTS[1],
+    balances: {},          // mint -> UI amount (number)
+    slippageBps: Number(localStorageGet("slip")) || 50,
+    quote: null, quoting: false, quoteSeq: 0, picking: "in", prices: {},
+  };
+  S.conn = new Connection(S.rpc, "confirmed");
+
+  function localStorageGet(k){ try { return localStorage.getItem("swap_"+k) } catch { return null } }
+  function localStorageSet(k,v){ try { localStorage.setItem("swap_"+k, v) } catch {} }
+
+  const $ = id => document.getElementById(id);
+  const el = { connect:$("connectBtn"), go:$("goBtn"), amtIn:$("amtIn"), amtOut:$("amtOut"), status:$("status"),
+    tokIn:$("tokIn"), tokOut:$("tokOut"), balIn:$("balIn"), balOut:$("balOut"), info:$("info"),
+    usdIn:$("usdIn"), usdOut:$("usdOut") };
+
+  // ---------- Helpers ----------
+  const toRaw = (ui, dec) => {
+    const [w, f=""] = String(ui).split(".");
+    const frac = (f + "0".repeat(dec)).slice(0, dec);
+    return BigInt((w || "0") + frac).toString();
+  };
+  const fromRaw = (raw, dec) => Number(raw) / 10 ** dec;
+  const fmt = (n, max=6) => {
+    if (!isFinite(n)) return "–";
+    if (n === 0) return "0";
+    if (n >= 1000) return n.toLocaleString(undefined,{maximumFractionDigits:2});
+    return Number(n.toPrecision(Math.min(max, 7))).toString();
+  };
+  const short = a => a.slice(0,4)+"…"+a.slice(-4);
+  const debounce = (fn, ms) => { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms) } };
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+  function icon(t, size=28){
+    if (t.icon) return `<img class="ico" src="${esc(t.icon)}" alt="" width="${size}" height="${size}" referrerpolicy="no-referrer" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'ico',textContent:'${esc(t.symbol||'?').slice(0,2)}'}))">`;
+    return `<span class="ico">${esc((t.symbol||"?").slice(0,2))}</span>`;
+  }
+  function setMsg(kind, html){ el.status.innerHTML = html ? `<div class="msg ${kind}">${html}</div>` : ""; }
+
+  // ---------- Wallet ----------
+  function detectProvider(){
+    return window.phantom?.solana?.isPhantom ? window.phantom.solana
+      : window.solflare?.isSolflare ? window.solflare
+      : window.backpack?.solana || window.solana || null;
+  }
+  async function connectWallet(){
+    const p = detectProvider();
+    if (!p) { setMsg("err", 'No Solana wallet found. Install <a href="https://phantom.app" target="_blank" rel="noopener">Phantom</a>, Solflare or Backpack, then reload.'); return; }
+    try {
+      const res = await p.connect();
+      S.provider = p;
+      S.pubkey = (res?.publicKey || p.publicKey).toString();
+      p.on?.("disconnect", disconnectWallet);
+      p.on?.("accountChanged", pk => { if (pk) { S.pubkey = pk.toString(); loadBalances(); renderAll(); } else disconnectWallet(); });
+      el.connect.textContent = short(S.pubkey);
+      setMsg("", "");
+      await loadBalances();
+    } catch (e) { setMsg("err", "Wallet connection was cancelled or failed."); }
+    renderAll();
+  }
+  async function disconnectWallet(){
+    try { await S.provider?.disconnect?.(); } catch {}
+    S.provider = null; S.pubkey = null; S.balances = {};
+    el.connect.textContent = "Connect wallet";
+    renderAll();
+  }
+  el.connect.onclick = () => S.pubkey ? disconnectWallet() : connectWallet();
+
+  async function loadBalances(){
+    if (!S.pubkey) return;
+    const owner = new PublicKey(S.pubkey);
+    const b = {};
+    try {
+      const lamports = await S.conn.getBalance(owner);
+      b[DEFAULTS[0].id] = lamports / 1e9;
+      for (const programId of [TOKEN_PROGRAM, TOKEN_2022]) {
+        const r = await S.conn.getParsedTokenAccountsByOwner(owner, { programId });
+        for (const { account } of r.value) {
+          const i = account.data.parsed.info;
+          b[i.mint] = (b[i.mint] || 0) + (i.tokenAmount.uiAmount || 0);
+        }
+      }
+      S.balances = b;
+    } catch (e) {
+      setMsg("err", "Could not load balances. Your RPC may be rate-limited; set a private one in settings.");
+    }
+    renderBalances();
+  }
+
+  // ---------- Rendering ----------
+  function renderTokens(){
+    el.tokIn.innerHTML  = `${icon(S.inTok)}<span>${esc(S.inTok.symbol)}</span>▾`;
+    el.tokOut.innerHTML = `${icon(S.outTok)}<span>${esc(S.outTok.symbol)}</span>▾`;
+  }
+  function renderBalances(){
+    const bi = S.balances[S.inTok.id], bo = S.balances[S.outTok.id];
+    el.balIn.textContent  = S.pubkey ? fmt(bi || 0) : "–";
+    el.balOut.textContent = S.pubkey ? fmt(bo || 0) : "–";
+    renderButton();
+  }
+  function inputAmount(){ const v = parseFloat(el.amtIn.value); return isFinite(v) && v > 0 ? v : 0; }
+
+  function renderButton(){
+    const amt = inputAmount(), bal = S.balances[S.inTok.id] || 0;
+    let text = "Swap", disabled = false;
+    if (!S.pubkey){ text = "Connect wallet"; }
+    else if (S.inTok.id === S.outTok.id){ text = "Select different tokens"; disabled = true; }
+    else if (!amt){ text = "Enter an amount"; disabled = true; }
+    else if (amt > bal){ text = `Insufficient ${S.inTok.symbol}`; disabled = true; }
+    else if (S.quoting){ text = "Finding best route…"; disabled = true; }
+    else if (!S.quote){ text = "No route found"; disabled = true; }
+    el.go.textContent = text; el.go.disabled = disabled;
+    if (!S.pubkey) el.go.disabled = false;
+  }
+
+  function renderUsd(){
+    const pi = S.prices[S.inTok.id], po = S.prices[S.outTok.id];
+    const a = inputAmount(), o = parseFloat(el.amtOut.value) || 0;
+    el.usdIn.textContent  = pi && a ? "≈ $" + fmt(a*pi, 4) : "";
+    el.usdOut.textContent = po && o ? "≈ $" + fmt(o*po, 4) : "";
+  }
+
+  function renderQuote(){
+    const q = S.quote;
+    if (!q){ el.amtOut.value = ""; el.info.hidden = true; renderUsd(); return; }
+    const out = fromRaw(q.outAmount, S.outTok.decimals), inn = fromRaw(q.inAmount, S.inTok.decimals);
+    el.amtOut.value = fmt(out, 8);
+    $("rate").textContent = `1 ${S.inTok.symbol} ≈ ${fmt(out/inn)} ${S.outTok.symbol}`;
+    const pi = parseFloat(q.priceImpactPct) * 100;
+    const imp = $("impact"); imp.textContent = (pi < 0.01 ? "<0.01" : pi.toFixed(2)) + "%";
+    imp.className = pi > 1 ? "hi" : "";
+    $("minOut").textContent = `${fmt(fromRaw(q.otherAmountThreshold, S.outTok.decimals))} ${S.outTok.symbol}`;
+    const labels = [...new Set((q.routePlan||[]).map(r => r.swapInfo?.label).filter(Boolean))];
+    $("route").textContent = labels.join(" + ") || "–";
+    el.info.hidden = false;
+    renderUsd();
+  }
+  function renderAll(){ renderTokens(); renderBalances(); renderQuote(); }
+
+  // ---------- Prices ----------
+  async function loadPrices(){
+    const ids = [S.inTok.id, S.outTok.id].join(",");
+    try {
+      const r = await fetch(`${JUP}/price/v3?ids=${ids}`);
+      const j = await r.json();
+      for (const id of Object.keys(j)) if (j[id]?.usdPrice) S.prices[id] = j[id].usdPrice;
+      renderUsd();
+    } catch {}
+  }
+
+  // ---------- Quote ----------
+  const getQuote = debounce(async () => {
+    const amt = inputAmount();
+    const seq = ++S.quoteSeq;
+    S.quote = null;
+    if (!amt || S.inTok.id === S.outTok.id){ S.quoting = false; renderQuote(); renderButton(); return; }
+    S.quoting = true; renderButton();
+    try {
+      const url = `${JUP}/swap/v1/quote?inputMint=${S.inTok.id}&outputMint=${S.outTok.id}` +
+        `&amount=${toRaw(amt, S.inTok.decimals)}&slippageBps=${S.slippageBps}&restrictIntermediateTokens=true`;
+      const r = await fetch(url);
+      const j = await r.json();
+      if (seq !== S.quoteSeq) return;
+      if (!r.ok || j.error) throw new Error(j.error || "No route");
+      S.quote = j;
+      setMsg("", "");
+    } catch (e) {
+      if (seq !== S.quoteSeq) return;
+      S.quote = null;
+      setMsg("err", "No route found for this pair and amount.");
+    }
+    S.quoting = false; renderQuote(); renderButton();
+  }, 350);
+
+  // ---------- Swap ----------
+  async function doSwap(){
+    if (!S.pubkey) return connectWallet();
+    if (!S.quote) return;
+    el.go.disabled = true; el.go.innerHTML = '<span class="spin"></span> Confirm in wallet…';
+    setMsg("", "");
+    try {
+      const r = await fetch(`${JUP}/swap/v1/swap`, {
+        method:"POST", headers:{ "Content-Type":"application/json" },
+        body: JSON.stringify({
+          quoteResponse: S.quote, userPublicKey: S.pubkey,
+          wrapAndUnwrapSol: true, dynamicComputeUnitLimit: true,
+          prioritizationFeeLamports: { priorityLevelWithMaxLamports: { maxLamports: 1000000, priorityLevel: "high" } },
+        }),
+      });
+      const j = await r.json();
+      if (!r.ok || !j.swapTransaction) throw new Error(j.error || "Could not build transaction");
+
+      const tx = VersionedTransaction.deserialize(Uint8Array.from(atob(j.swapTransaction), c => c.charCodeAt(0)));
+      const signed = await S.provider.signTransaction(tx);
+
+      el.go.innerHTML = '<span class="spin"></span> Sending…';
+      const sig = await S.conn.sendRawTransaction(signed.serialize(), { skipPreflight:true, maxRetries:3 });
+      setMsg("ok", `Submitted. Waiting for confirmation… <a target="_blank" rel="noopener" href="https://solscan.io/tx/${sig}">View on Solscan</a>`);
+      el.go.innerHTML = '<span class="spin"></span> Confirming…';
+
+      await confirmTx(sig, j.lastValidBlockHeight);
+      setMsg("ok", `Swap confirmed. <a target="_blank" rel="noopener" href="https://solscan.io/tx/${sig}">View on Solscan</a>`);
+      el.amtIn.value = ""; S.quote = null;
+      await loadBalances();
+    } catch (e) {
+      const m = String(e?.message || e);
+      setMsg("err", /reject|denied|cancel/i.test(m) ? "Transaction was rejected in your wallet." : "Swap failed: " + esc(m));
+    }
+    renderAll(); getQuote();
+  }
+
+  async function confirmTx(sig, lastValid){
+    const start = Date.now();
+    while (Date.now() - start < 75000) {
+      const { value } = await S.conn.getSignatureStatuses([sig], { searchTransactionHistory:true });
+      const st = value[0];
+      if (st?.err) throw new Error("Transaction failed on-chain: " + JSON.stringify(st.err));
+      if (st && (st.confirmationStatus === "confirmed" || st.confirmationStatus === "finalized")) return;
+      if (lastValid) {
+        const h = await S.conn.getBlockHeight("confirmed");
+        if (h > lastValid) throw new Error("Transaction expired before landing. Try again.");
+      }
+      await new Promise(r => setTimeout(r, 1500));
+    }
+    throw new Error("Confirmation timed out. Check Solscan for the final status.");
+  }
+  el.go.onclick = doSwap;
+
+  // ---------- Inputs ----------
+  el.amtIn.addEventListener("input", () => {
+    el.amtIn.value = el.amtIn.value.replace(/[^0-9.]/g, "").replace(/(\..*)\./g, "$1");
+    renderButton(); getQuote(); renderUsd();
+  });
+  function setFraction(f){
+    let bal = S.balances[S.inTok.id] || 0;
+    if (S.inTok.id === DEFAULTS[0].id) bal = Math.max(0, bal - 0.01);   // keep SOL for fees
+    el.amtIn.value = bal ? String(+(bal * f).toFixed(S.inTok.decimals)) : "";
+    renderButton(); getQuote();
+  }
+  $("halfBtn").onclick = () => setFraction(.5);
+  $("maxBtn").onclick  = () => setFraction(1);
+  $("flipBtn").onclick = () => {
+    [S.inTok, S.outTok] = [S.outTok, S.inTok];
+    el.amtIn.value = S.quote ? String(fromRaw(S.quote.outAmount, S.inTok.decimals)) : el.amtIn.value;
+    S.quote = null; renderAll(); loadPrices(); getQuote();
+  };
+
+  // ---------- Token picker ----------
+  const modal = $("tokModal"), list = $("tokList"), search = $("search");
+  function openPicker(side){ S.picking = side; modal.classList.add("open"); search.value = ""; showTokens(DEFAULTS); search.focus(); }
+  function closeModals(){ document.querySelectorAll(".modal").forEach(m => m.classList.remove("open")); }
+  function showTokens(tokens){
+    list.innerHTML = "";
+    if (!tokens.length){ list.innerHTML = '<div class="label" style="padding:12px">No tokens found.</div>'; return; }
+    for (const t of tokens) {
+      const b = document.createElement("button"); b.className = "item";
+      const bal = S.balances[t.id];
+      b.innerHTML = `${icon(t, 36)}<span class="nm"><b>${esc(t.symbol)}</b><small>${esc(t.name || "")} · ${short(t.id)}</small></span>${bal ? `<span>${fmt(bal)}</span>` : ""}`;
+      b.onclick = () => selectToken(t);
+      list.appendChild(b);
+    }
+  }
+  function selectToken(t){
+    t = { id:t.id, symbol:t.symbol, name:t.name, decimals:t.decimals, icon:t.icon };
+    if (S.picking === "in") { if (t.id === S.outTok.id) S.outTok = S.inTok; S.inTok = t; }
+    else { if (t.id === S.inTok.id) S.inTok = S.outTok; S.outTok = t; }
+    closeModals(); S.quote = null; renderAll(); loadPrices(); getQuote();
+  }
+  const doSearch = debounce(async () => {
+    const q = search.value.trim();
+    if (!q) return showTokens(DEFAULTS);
+    try {
+      const r = await fetch(`${JUP}/tokens/v2/search?query=${encodeURIComponent(q)}`);
+      const j = await r.json();
+      showTokens((Array.isArray(j) ? j : []).slice(0, 40));
+    } catch { list.innerHTML = '<div class="label" style="padding:12px">Search failed. Check your connection.</div>'; }
+  }, 300);
+  search.addEventListener("input", doSearch);
+  el.tokIn.onclick  = () => openPicker("in");
+  el.tokOut.onclick = () => openPicker("out");
+  document.querySelectorAll(".modal").forEach(m => m.addEventListener("mousedown", e => { if (e.target === m) closeModals(); }));
+  document.addEventListener("keydown", e => { if (e.key === "Escape") closeModals(); });
+
+  // ---------- Settings ----------
+  const presets = [10, 50, 100], pEl = $("slipPresets"), custom = $("slipCustom");
+  function renderSlip(){
+    pEl.innerHTML = "";
+    for (const p of presets) {
+      const b = document.createElement("button");
+      b.textContent = (p/100) + "%"; b.className = S.slippageBps === p ? "on" : "";
+      b.onclick = () => { S.slippageBps = p; custom.value = ""; localStorageSet("slip", p); renderSlip(); getQuote(); };
+      pEl.appendChild(b);
+    }
+  }
+  custom.addEventListener("input", () => {
+    const v = parseFloat(custom.value);
+    if (v > 0 && v <= 50) { S.slippageBps = Math.round(v * 100); localStorageSet("slip", S.slippageBps); renderSlip(); getQuote(); }
+  });
+  $("rpcInput").value = S.rpc;
+  $("rpcInput").addEventListener("change", e => {
+    const v = e.target.value.trim() || DEFAULT_RPC;
+    try { new URL(v); } catch { return; }
+    S.rpc = v; localStorageSet("rpc", v); S.conn = new Connection(v, "confirmed"); loadBalances();
+  });
+  $("settingsBtn").onclick = () => { renderSlip(); $("setModal").classList.add("open"); };
+  $("setClose").onclick = closeModals;
+
+  // ---------- Init ----------
+  renderAll(); renderSlip(); loadPrices();
+  // Reconnect silently if the wallet already trusts this site
+  const p = detectProvider();
+  if (p?.connect) p.connect({ onlyIfTrusted:true }).then(res => {
+    S.provider = p; S.pubkey = (res?.publicKey || p.publicKey).toString();
+    el.connect.textContent = short(S.pubkey); loadBalances().then(renderAll);
+  }).catch(() => {});
+  setInterval(() => { if (S.pubkey) loadBalances(); }, 30000);
+  setInterval(() => { if (S.quote && !S.quoting && inputAmount()) getQuote(); }, 20000);
+})();
+</script>
+</body>
+</html>
